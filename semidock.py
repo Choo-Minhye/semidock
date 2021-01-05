@@ -74,6 +74,7 @@ class jamesDocking(object):
                     self._dockServer.publish_feedback(self._dockingfb)                         
 
                     if int(bin(self.dockdata & 0b000111000), 2) >= 0b000001000 :
+                        print("state 1 to 5")
                         self._dockState = 5
                     else :
                         self._dockState = 2         
@@ -81,11 +82,13 @@ class jamesDocking(object):
                 self._velPublisher.publish(self._velocity)
 
             elif self._dockState == 2:
+                print("state 2")
                 if int(bin(self.dockdata & 0b000111000), 2) >= 0b000001000 :
                     self._dockingfb.sequence = 'Center line found...'
                     self._dockServer.publish_feedback(self._dockingfb)                         
                     self._velocity.linear.x = 0
                     self._velPublisher.publish(self._velocity)
+                    print("state 2 to 5")
                     self._dockState = 5
                 
                 elif int(bin(self.dockdata & 0b011000000), 2) >= 0b001000000 :
@@ -102,26 +105,30 @@ class jamesDocking(object):
                         self._velPublisher.publish(self._velocity)
                         self._dockState = 4
 
-                self._velocity.linear.x = 0.1
+                self._velocity.linear.x = -0.1
                 self._velocity.angular.z = 0
                 self._velPublisher.publish(self._velocity)
 
-            elif self._dockState == 3:                        
+            elif self._dockState == 3:
+                print("state 3")
                 self._velocity.linear.x = 0
                 self._velocity.angular.z = 0.3
                 self._velPublisher.publish(self._velocity)
                 
                 if int(bin(self.dockdata & 0b000111001), 2) >= 0b000000001 :
+                    print("state 3 to 5")
                     self._dockState = 5
                     self._dockingfb.sequence = 'Get ready to dock...'
                     self._dockServer.publish_feedback(self._dockingfb)                         
                     
             elif self._dockState == 4:
+                print("state 4")
                 self._velocity.linear.x = 0
                 self._velocity.angular.z = -0.3
                 self._velPublisher.publish(self._velocity)
                 
                 if int(bin(self.dockdata & 0b100111000), 2) >= 0b000001000 :
+                    print("state 4 to 5")
                     self._dockState = 5
                     self._dockingfb.sequence = 'Get ready to dock...'
                     self._dockServer.publish_feedback(self._dockingfb)                         
@@ -136,8 +143,6 @@ class jamesDocking(object):
             elif self._dockState == 6:
                 count = 0
 
-                
-
                 # if (self._bumperState.bumper == 1) and (self._bumperState.state == 1):
                 #     self._velocity.linear.x = 0
                 #     self._velocity.angular.z = 0
@@ -145,20 +150,42 @@ class jamesDocking(object):
                 #     self._success = True
 
                 if int(bin(self.dockdata & 0b000010000), 2) == 0b000010000 : #   ~|~|~  ~|C|~  ~|~|~
-                    self._velocity.linear.x = 0.045 #0.07
-                    self._velocity.angular.z = 0
+                    self._velocity.linear.x = -0.045 #0.07
+                    self.angular_z = 0
+                    if int(bin(self.dockdata & 0b000100000), 2) == 0b000100000 : #   ~|~|~  L|C|~  ~|~|~
+                        self.angular_z += -0.15
+                        print("center & left")
+                    if int(bin(self.dockdata & 0b000001000), 2) == 0b000001000 : #   ~|~|~  ~|C|R  ~|~|~
+                        self.angular_z += 0.15
+                        print("center & left")
+                    
+                    self._velocity.angular.z = self.angular_z
+                    self._velPublisher.publish(self._velocity)
+
+                elif int(bin(self.dockdata & 0b10000001), 2) >= 0b000000001 : #   L|~|~  ~|~|~  ~|~|R
+                    self._velocity.linear.x = -0.035
+                    self.angular__z = 0
+                    if int(bin(self.dockdata & 0b000000001), 2) == 0b000000001 : #   ~|~|~  ~|~|~  ~|~|R
+                        print("right")
+                        self.angular__z += -0.15
+                    if int(bin(self.dockdata & 0b100000000), 2) == 0b100000000 : #   L|~|~  ~|~|~  ~|~|~
+                        print("left")
+                        self.angular__z += 0.15
+                    self._velocity.angular.z = self.angular__z
                     self._velPublisher.publish(self._velocity)
 
 
-                elif int(bin(self.dockdata & 0b000100001), 2) >= 0b000000001 : #   ~|~|~  L|~|~  ~|~|R
-                    self._velocity.linear.x = 0.035
-                    self._velocity.angular.z = -0.35
+                elif int(bin(self.dockdata & 0b000100000), 2) >= 0b000000001 : #   ~|~|~  L|~|~  ~|~|~
+                    self._velocity.linear.x = -0.035
+                    self._velocity.angular.z = -0.25
                     self._velPublisher.publish(self._velocity)
+                    print("real real real left")
 
-                elif int(bin(self.dockdata & 0b100001000), 2) >= 0b000001000 : #   L|~|~  ~|~|R  ~|~|~
-                    self._velocity.linear.x = 0.035
-                    self._velocity.angular.z = 0.35
+                elif int(bin(self.dockdata & 0b000001000), 2) >= 0b000001000 : #   ~|~|~  ~|~|R  ~|~|~
+                    self._velocity.linear.x = -0.035
+                    self._velocity.angular.z = 0.25
                     self._velPublisher.publish(self._velocity)            
+                    print("real real real right")
 
                 elif int(bin(self.dockdata & 0b001000000), 2) >= 0b001000000 : #   ~|~|R  ~|~|~  ~|~|~
                     self._velocity.linear.x = 0
@@ -171,7 +198,7 @@ class jamesDocking(object):
                     self._velPublisher.publish(self._velocity)
 
                 else :
-                    self._velocity.linear.x = 0.03 #0.03
+                    self._velocity.linear.x = -0.03 #0.03
                     self._velocity.angular.z = 0
                     self._velPublisher.publish(self._velocity)
 
