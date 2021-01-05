@@ -13,7 +13,7 @@
 int RECEIVERS = 3;
 
 
-const int buttonPin = 2;                          // for bumpercase
+const int buttonPin = 8;                          // for bumpercase
 const int LeftIr = 4;                             //Variable
 const int CenterIr = 5;                           //for
 const int RightIr = 6;                            //GPIO
@@ -116,7 +116,7 @@ void loop() {
     // when switch non pressed, HIGH
 
 
-    range_time = millis() + 10;
+    range_time_bumper = millis() + 10;
   }
 
 
